@@ -22,10 +22,10 @@ app = Flask(__name__)
 
 @app.route("/")
 def root_page():
-        return redirect("home")
+        return redirect("adduser")
 
-#ホーム画面にアクセスした場合の処理
-@app.route("/home", methods=["GET","POST"])
+#ユーザ登録
+@app.route("/adduser", methods=["GET","POST"])
 def title_page():
         # GET＝検索により該当のスレッドを表示
         if request.method == "GET":
@@ -121,5 +121,7 @@ def thread_page():
                 #最後にGETを用いて掲示板IDよりリダイレクトする
                 return redirect("thread?id="+html.escape(str(thread_id)))
 
+
 if __name__=="__main__":
     app.run(host="0.0.0.0")
+
