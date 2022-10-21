@@ -52,9 +52,20 @@ def adduser_page():
                 
                 return redirect("finish")
 
-@app.route('/finish') 
+@app.route('/finish' ,methods=["POST","GET"]) 
 def finish(): 
-	return "登録完了しました！" 
+        # GET＝ページ表示
+        if request.method == "GET": 
+                return render_template('finish.html')
+        elif request.method == "POST":
+	        return redirect("home")
+
+@app.route('/home',methods=["POST","GET"])
+def home():
+        if request.method == "GET": 
+                return render_template('home.html')
+        elif request.method == "POST":
+                return redirect("home")
 
 if __name__=="__main__":
     app.run(host="0.0.0.0")
