@@ -1,60 +1,18 @@
-
-<!DOCTYPE html>
-
-<html lang="ja">
-
-<head>
-  <meta charset="UTF-8">
-  <title>マイページ</title>
-
-<style>
-
-h1 {
-  color: teal;
-  padding: 0.5em 0;
-  border-top: solid 3px teal;
-  border-bottom: solid 3px teal;
-  text-align:center;
-}
-
-h3 {
-  text-align:center;
-  color: teal;
-  border: solid 3px teal;
-  padding: 0.5em;
-  border-radius: 0.5em;
-}
-
-button {
-display:inline-block;
-}
-
-div {
-text-align:center;
-}
-
-</style>
-
-</head>
-
-<body>
-  <div id="headline">
-  <p style="text-align: right">
-　<a href="https://www.google.com/?hl=ja">○○さんのマイページ</a></p>
-  <h1>銀行口座 残高照会サービス</h1>
-  
-  <h3>残高照会</h3>
-  </div>
-  <div class="main">
-  <h2 style="text-align: center">123,456円</h2>
-
-<div>
-<button>各種振込</button>
-<button>入出金履歴</button>
-</div>
-
-  <p style="text-align: center">
-  <a href="https://www.google.com/?hl=ja">ホームへ戻る</a></p>
-  </div>
-</body>
+<html>
+ <head>
+   <title>マイページ</title>
+ </head>
+ 
+ <body>
+    <p style="text-align: right">
+      {{name|safe}}さんのマイページ</p>    
+    <h1>銀行口座 残高照会サービス</h1>
+    <h3>残高照会</h3>
+  <h2 style="text-align: center">{{money|safe}}円</h2>
+  <div> 
+    <form method="post" action="mypage"> 
+    <input type="submit" value="入出金の記録"> 
+    </form> 
+   </div> 
+ </body>
 </html>
