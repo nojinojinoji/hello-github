@@ -1,13 +1,19 @@
-from cv2 import AKAZE_DESCRIPTOR_KAZE
-from flask import Flask, request, redirect, render_template
-import MySQLdb
-import html
-import datetime
-
 # cursor()    　 ＝ データを1件ずつ抜き取るための仕組み
 # execute()    　＝ SQLを実行する
 # html.escape()　＝ 意味のあるものを無向にする
 # render_template＝ HTMLを表示する（Flaskの機能）
+
+
+from cv2 import AKAZE_DESCRIPTOR_KAZE
+from flask import Flask, request, session, redirect, render_template
+from werkzeug.security import generate_password_hash as gph
+from werkzeug.security import check_password_hash as cph
+from datetime import timedelta
+import MySQLdb
+import html
+import datetime
+import secrets
+
 
 def connect():
         con = MySQLdb.connect(
