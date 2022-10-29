@@ -1,9 +1,3 @@
-# cursor()    　 ＝ データを1件ずつ抜き取るための仕組み
-# execute()    　＝ SQLを実行する
-# html.escape()　＝ 意味のあるものを無向にする
-# render_template＝ HTMLを表示する（Flaskの機能）
-
-import email
 from cv2 import AKAZE_DESCRIPTOR_KAZE
 from flask import Flask, request, redirect,  session, render_template
 from scipy.fft import idctn
@@ -51,6 +45,7 @@ def make():
                 con = connect()
                 cur = con.cursor()
                 # メールアドレスの被りがあるか検索
+                # execute() ＝ SQLを実行する
                 cur.execute("""
                 SELECT * FROM users WHERE email=%(email)s""",
                 {"email":email})
