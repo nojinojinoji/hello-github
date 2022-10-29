@@ -1,0 +1,54 @@
+@charset "UTF-8";
+
+body {
+    background-color: gray;
+}
+
+p{
+    color: white;
+}
+
+h1 {
+    color: white;
+    padding: 0.5em 0;
+    border-top: solid 3px white;
+    border-bottom: solid 3px white;
+    text-align:center;
+}
+
+.daimei{
+    text-align:center;
+    color: white;
+    border: solid 3px white;
+    padding: 0.5em;
+    border-radius: 0.5em;
+}
+
+.linkseni{
+    text-align:center;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    appearance: none;
+    display: block;
+    padding: 5px 20px;
+    border-radius: 7px;
+    border: none;
+    background-color: white;
+}
+
+.btn-submit{
+    margin: auto;
+    text-align:center;
+    font-size: 13px;
+    font-weight: bold;
+    color:whitesmoke;
+    cursor: pointer;
+    appearance: none;
+    display: block;
+    padding: 5px 20px;
+    border-radius: 7px;
+    border: none;
+    border-bottom: 4px solid navy;
+    background-color: teal;
+}

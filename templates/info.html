@@ -1,7 +1,29 @@
-<a href="login">ログイン画面へ</a>
+<head>
+    <meta charset=”utf-8″>
+    <title>登録完了</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+
+<body>
 <table align="center" cellspacing="0">
-    <tr><td>名前</td><td>{{ name|safe }}</td></tr>
+    <br>
+    <h1>預金金額記録 アプリケーション</h1>
+    <h3  class="daimei">登録完了</h3>
+
+    <tr><td>ユーザ名</td><td>{{ name|safe }}</td></tr>
+
+    <tr><td>生年月日</td><td>{{ birth|safe }}</td></tr>
+
     <tr><td>メールアドレス</td><td>{{ email|safe }}</td></tr>
-    <tr><td>電話番号</td><td>{{ tel|safe }}</td></tr>
-    <tr><td>平文パスワード</td><td>{{ passwd|safe }}</td></tr>
+    
+    <tr><td>ID</td><td>{{ id|safe }}</td></tr>
+    
+    <tr><td>パスワード</td><td>{{ passwd|safe }}</td></tr>
 </table>
+<br>
+<br>
+<br>
+<div class="linkseni">
+    <a href="login">ログイン画面へ</a>
+</div>
+</body>

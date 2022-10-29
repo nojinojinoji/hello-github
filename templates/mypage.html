@@ -1,18 +1,18 @@
-<html>
- <head>
-   <title>マイページ</title>
- </head>
- 
- <body>
-    <p style="text-align: right">
-      {{name|safe}}さんのマイページ</p>    
-    <h1>銀行口座 残高照会サービス</h1>
-    <h3>残高照会</h3>
-  <h2 style="text-align: center">{{money|safe}}円</h2>
-  <div> 
-    <form method="post" action="mypage"> 
-    <input type="submit" value="入出金の記録"> 
-    </form> 
-   </div> 
- </body>
-</html>
+<head>
+    <meta charset=”utf-8″>
+    <title>マイページ</title>
+    <link rel="stylesheet" href="static/css/style.css">
+  </head>
+
+<body>
+    <p style="text-align: right">{{name|safe}}さん（ID:{{id|safe}}）のマイページ</p>   
+      <h1>預金金額記録 アプリケーション</h1>
+      <h3  class="daimei">残高照会</h3>
+      <h2 style="text-align: center">{{money|safe}}円</h2>
+    <div> 
+      <form method="post" action="mypage"> 
+      <input type="submit" value="入出金を記録する"  class="btn-submit">
+      </form> 
+    </div> 
+
+</body>

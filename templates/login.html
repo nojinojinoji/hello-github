@@ -1,9 +1,27 @@
-<a href="make">新規作成</a>
-{{ msg|safe }}
+<head>
+    <meta charset=”utf-8″>
+    <title>ログイン</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+
+<body>
+<br>
+<p align="center">{{ msg|safe }}</p>
+
 <table align="center">
+    <br>
+    <h1>預金金額記録 アプリケーション</h1>
+    <h3  class="daimei">ログイン</h3>
     <form method="POST" action="login">
-        <tr><td>メールアドレス</td><td><input type="email" name="email" required></td></tr>
+        <tr><td>ID</td><td><input type="text" name="id" required></td></tr>
         <tr><td>パスワード</td><td><input type="password" name="passwd" required></td></tr>
-        <tr><td align="right" colspan="2"><input type="submit" value="認証"></td></tr>
+        <tr><td align="right" colspan="2"><input type="submit" value="ログイン" class="btn-submit"></td></tr>
     </form>
 </table>
+<br>
+<br>
+<br>
+<div class="linkseni">
+    <a href="make">アカウントの新規作成はコチラ！</a>
+</div>
+</body>
