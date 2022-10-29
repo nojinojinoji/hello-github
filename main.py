@@ -168,53 +168,43 @@ def home():
         return redirect("login")
 
 
-
-
-
 # 収入支出
-#@app.route('/mypage',methods=["POST","GET"])
-#def home():
-#        if request.method == "GET": 
-#                name="nojiri"
-#                money=123456
-#                return render_template("mypage.html",name=name, money=money)
-#        elif request.method == "POST":
-#                return redirect("record")
-
-
-#入出金の記録
-@app.route('/record',methods=["POST","GET"])
-def record():
+@app.route('/inout',methods=["GET","POST"])
+def inout():
         if request.method == "GET": 
                 return render_template("record.html")
         elif request.method == "POST":
-                puramai = request.form["puramai"]
-                con = connect()
-                cur = con.cursor()
-                
-                #cur.execute("""
-                #SELECT money
-                #FROM balance
-                #WHERE id=%(id)s""",
-                #{"id":2})
+                money = request.form["money"]
+                money = int(money)
+                if "id" in session:
+                        id = session["id"]
+                        con = connect()
+                        cur = con.cursor()
+                        cur.execute("""
+                        SELECT money
+                        FROM balance
+                        WHERE id=%(id)s""",{"id":id})
+                        data=[]
+                        for row in cur:
+                                data.append(row)
+                        amoney=data[0][0]
+                        con.close()
 
-                cur.execute("""
-                UPDATE balance
-                SET money = 1000
-                WHERE id=2""")
-                
-                con.commit()
-                con.close() 
+                        # 更新後の金額＝更新前＋差額
+                        amoney += money
 
-                return redirect("completion")
-
-#記録完了
-@app.route('/completion',methods=["POST","GET"])
-def completion():
-        if request.method == "GET": 
-                return render_template("completion.html")
-        elif request.method == "POST":
-                return redirect("completion")
+                        con = connect()
+                        cur = con.cursor()
+                        cur.execute("""
+                        UPDATE balance
+                        SET money=%(amoney)s
+                        WHERE id=%(id)s""",{"amoney":amoney, "id":id})
+                        con.commit()
+                        con.close()
+                        return render_template("finish.html",amoney=amoney)
+                else:
+                # セッションがない場合ログイン画面にリダイレクト
+                        return redirect("login")
 
 
 if __name__=="__main__":

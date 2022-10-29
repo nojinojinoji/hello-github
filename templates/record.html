@@ -1,17 +1,21 @@
-<html>
 <head>
-  <meta charset="UTF-8">
-  <title>入出金の入力</title>
+    <meta charset=”utf-8″>
+    <title>マイページ</title>
+    <link rel="stylesheet" href="static/css/style.css">
 </head>
 
-<body> 
-  <h1>{{name|safe}}さんの入出金の記録</h1> 
-   <p>以下の項目を入力してください</p> 
-   <div> 
-      <form method="post" action="record"> 
-          入出金額<br><input type="text" name="puramai" required><br><br>
-          <input type="submit" value="確定"> 
-      </form>
-   </div> 
+<body>
+    <br>
+    <h1>預金残高記録 アプリケーション</h1>
+    <h3  class="daimei">入出金記録</h3>
+    <p style="text-align:center">
+    入出金がありましたら以下に入力してください。<br>
+    （入力例）<br>
+    入金5000円 ⇒ 5000<br>
+    出金1000円 ⇒ -1000</p>
+    
+    <form method="POST" action="inout"> 
+      <p style="text-align:center">入出金金額 
+        <input type="number" name="money"></p>
+      <input type="submit" value="預金金額を更新する"  class="btn-submit">
 </body>
-</html>
