@@ -1,5 +1,5 @@
 from cv2 import AKAZE_DESCRIPTOR_KAZE
-from flask import Flask, request, redirect,  session, render_template
+from flask import Flask, request, session, jsonify, redirect, render_template
 from scipy.fft import idctn
 from werkzeug.security import generate_password_hash as gph
 from werkzeug.security import check_password_hash as cph
@@ -8,6 +8,7 @@ import MySQLdb
 import html
 import datetime
 import secrets
+import dicttoxml
 
 
 def connect():
@@ -28,6 +29,13 @@ app.permanent_session_lifetime = timedelta(minutes=60)
 @app.route("/")
 def root_page():
         return redirect("make")
+
+
+#WebAPI検索＆表示
+@app.route("/api", methods=["GET","POST"])
+def api():
+    return render_template("search.html")
+
 
 #アカウント登録
 @app.route("/make", methods=["GET","POST"])
