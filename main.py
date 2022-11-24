@@ -26,15 +26,79 @@ app = Flask(__name__)
 app.secret_key = secrets.token_urlsafe(16)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
+#API検索画面
 @app.route("/")
 def root_page():
-        return redirect("make")
+        return render_template("search.html")
+    
+
+#WebAPI検索結果
+@app.route("/result")
+def result():
+    form = request.args.get("format")
+    id = request.args.get("id")
+    
+    con = connect()
+    cur = con.cursor()
+    cur.execute("""
+    SELECT name, id
+    FROM users
+    WHERE id=%(id)s
+    """,{"id":id})
+
+    res = "<title>検索結果</title>"
+    for row in cur:
+        res = res + "<table border=\"1\">\n"
+        res = res + "\t<tr><td><a href=\"api?id=" + html.escape(str(row[1])) + "&"
+        res = res + "format=" + html.escape(form) + "\">" + html.escape(row[0]) +"</a></td></tr>\n"
+        res = res + "\t<tr><td><pre>" + html.escape(row[0]) + "</pre></td></tr>"
+        res = res + "</table>"
+    con.close()
+    return res
 
 
-#WebAPI検索＆表示
-@app.route("/api", methods=["GET","POST"])
+#WebAPI出力画面
+@app.route("/api")
 def api():
-    return render_template("search.html")
+    form = request.args.get("format")
+    id = request.args.get("id")
+
+    # JSONとXMLで分岐
+    # JSON形式
+    if form == "JSON":
+        #降順
+        con = connect()
+        cur = con.cursor()
+        cur.execute("""
+        SELECT * 
+        FROM balance
+        ORDER BY money DESC""")
+        con.commit()
+        con.close()
+
+        # 値取り出す
+        con = connect()
+        cur = con.cursor()
+        cur.execute("""
+        SELECT name,money
+        FROM balance
+        WHERE id=%(id)s
+        """,{"id":id})
+        con.commit()
+        con.close()
+
+        dic = {}
+        for row in cur:
+            dic["name"] = row[0]
+            dic["money"] = row[1]
+            
+        return jsonify(dic)
+        
+        # XML形式
+        #else:
+
+        #    for row in cur:
+        #        return row 
 
 
 #アカウント登録
@@ -92,17 +156,17 @@ def make():
                 con.commit()
                 con.close()
 
+                # 預金テーブルにも登録する
                 con = connect()
                 cur = con.cursor()
-                # 預金テーブルにも登録する
                 cur.execute("""
                 INSERT INTO balance
-                (id,updatetime,money)
-                VALUES(%(id)s,%(updatetime)s,%(money)s)""",
-                {"id":id, "updatetime":str(datetime.datetime.today()), "money":0})
+                (id,name,updatetime,money)
+                VALUES(%(id)s,%(name)s,%(updatetime)s,%(money)s)""",
+                {"id":id, "name":name,"updatetime":str(datetime.datetime.today()), "money":0})
                 con.commit()
                 con.close()
-                
+
                 return render_template("info.html",email=email,passwd=passwd,name=name,birth=birth,id=id)
 
 
@@ -181,6 +245,7 @@ def inout():
                 money = int(money)
                 if "id" in session:
                         id = session["id"]
+
                         con = connect()
                         cur = con.cursor()
                         cur.execute("""
@@ -204,6 +269,7 @@ def inout():
                         WHERE id=%(id)s""",{"amoney":amoney, "id":id})
                         con.commit()
                         con.close()
+
                         return render_template("finish.html",amoney=amoney)
                 else:
                 # セッションがない場合ログイン画面にリダイレクト
