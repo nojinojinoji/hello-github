@@ -1,5 +1,5 @@
 from cv2 import AKAZE_DESCRIPTOR_KAZE
-from flask import Flask, request, session, jsonify, redirect, render_template
+from flask import Flask, request, session, jsonify, make_response, redirect, render_template
 from scipy.fft import idctn
 from werkzeug.security import generate_password_hash as gph
 from werkzeug.security import check_password_hash as cph
@@ -8,7 +8,7 @@ import MySQLdb
 import html
 import datetime
 import secrets
-import dicttoxml
+from dicttoxml import dicttoxml
 
 
 def connect():
@@ -26,15 +26,74 @@ app = Flask(__name__)
 app.secret_key = secrets.token_urlsafe(16)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
-#API検索画面
-@app.route("/")
+#API検索画面 #WebAPI出力画面
+@app.route("/getapi",methods=["GET","POST"])
 def root_page():
-        return render_template("search.html")
-    
+    if request.method == "GET":
+        return render_template("getapi.html")
+    elif request.method == "POST":
+        sex = request.form["format1"]
+        form = request.form["format2"]
+        
+        # 性別分岐（全員）
+        if sex=="MF":
+            con = connect()
+            cur = con.cursor()
+            cur.execute("""
+            SELECT name,money,sex
+            FROM balance
+            ORDER BY money DESC
+            """)
+        
+        # 性別分岐（男性）
+        elif sex=="M":
+            con = connect()
+            cur = con.cursor()
+            cur.execute("""
+            SELECT name,money,sex
+            FROM balance
+            WHERE sex="M"
+            ORDER BY money DESC
+            """)
+
+        # 性別分岐（女性）
+        elif sex=="F":
+            con = connect()
+            cur = con.cursor()
+            cur.execute("""
+            SELECT name,money,sex
+            FROM balance
+            WHERE sex="F"
+            ORDER BY money DESC
+            """)
+        
+        res = {}
+        resp = {}
+        tmpa = []
+        for row in cur:
+            dic = {}
+            dic["name"] = row[0]
+            dic["money"] = row[1]
+            dic["sex"] = row[2]
+            tmpa.append(dic)
+        res["content"] = tmpa
+        con.commit()
+        con.close()
+        # JSONとXMLで分岐
+        # JSON
+        if form == "JSON":
+            return render_template("webapi.html",res=res)
+                   #return jsonify(res)
+        elif form == "XML":
+            xml = dicttoxml(dic)  
+            resp = make_response(xml)
+            resp.mimetype = "text/xml"
+            return resp
 
 #WebAPI検索結果
 @app.route("/result")
 def result():
+    
     form = request.args.get("format")
     id = request.args.get("id")
     
@@ -57,53 +116,9 @@ def result():
     return res
 
 
-#WebAPI出力画面
-@app.route("/api")
-def api():
-    form = request.args.get("format")
-    id = request.args.get("id")
-
-    # JSONとXMLで分岐
-    # JSON形式
-    if form == "JSON":
-        #降順
-        con = connect()
-        cur = con.cursor()
-        cur.execute("""
-        SELECT * 
-        FROM balance
-        ORDER BY money DESC""")
-        con.commit()
-        con.close()
-
-        # 値取り出す
-        con = connect()
-        cur = con.cursor()
-        cur.execute("""
-        SELECT name,money
-        FROM balance
-        WHERE id=%(id)s
-        """,{"id":id})
-        con.commit()
-        con.close()
-
-        dic = {}
-        for row in cur:
-            dic["name"] = row[0]
-            dic["money"] = row[1]
-            
-        return jsonify(dic)
-        
-        # XML形式
-        #else:
-
-        #    for row in cur:
-        #        return row 
-
-
 #アカウント登録
 @app.route("/make", methods=["GET","POST"])
-def make(): 
+def make():
         if request.method == "GET":
                 return render_template('make.html')
         elif request.method == "POST":
@@ -112,6 +127,7 @@ def make():
                 id =  request.form["id"]
                 name = request.form["name"] 
                 birth = request.form["birth"] 
+                sex = request.form["format0"]
                 hashpass=gph(passwd)
 
                 con = connect()
@@ -150,9 +166,9 @@ def make():
                 # メアド&IDの被りがない場合に登録ができる
                 cur.execute("""
                 INSERT INTO users
-                (email,passwd,id,name,birth)
-                VALUES(%(email)s,%(hashpass)s,%(id)s,%(name)s,%(birth)s)""",
-                {"email":email, "hashpass":hashpass, "id":id, "name":name, "birth":birth})
+                (email,passwd,name,birth,id,sex)
+                VALUES(%(email)s,%(hashpass)s,%(name)s,%(birth)s,%(id)s,%(sex)s)""",
+                {"email":email, "hashpass":hashpass, "name":name, "birth":birth, "id":id,"sex":sex})
                 con.commit()
                 con.close()
 
@@ -161,13 +177,18 @@ def make():
                 cur = con.cursor()
                 cur.execute("""
                 INSERT INTO balance
-                (id,name,updatetime,money)
-                VALUES(%(id)s,%(name)s,%(updatetime)s,%(money)s)""",
-                {"id":id, "name":name,"updatetime":str(datetime.datetime.today()), "money":0})
+                (id,name,updatetime,money,sex)
+                VALUES(%(id)s,%(name)s,%(updatetime)s,%(money)s,%(sex)s)""",
+                {"id":id, "name":name,"updatetime":str(datetime.datetime.today()), "money":0,"sex":sex})
                 con.commit()
                 con.close()
 
-                return render_template("info.html",email=email,passwd=passwd,name=name,birth=birth,id=id)
+                if sex=="M":
+                    sex_="男性"
+                else:
+                    sex_="女性"
+                
+                return render_template("info.html",email=email,passwd=passwd,name=name,birth=birth,id=id,sex=sex_)
 
 
 # ログイン

@@ -52,3 +52,8 @@ h1 {
     border-bottom: 4px solid navy;
     background-color: teal;
 }
+
+td.example1 { 
+    text-align: left;
+    color: white;
+}
