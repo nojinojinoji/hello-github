@@ -1,5 +1,3 @@
-{{ msg|safe }}
-
 <head>
     <meta charset=”utf-8″>
     <title>新規登録</title>
@@ -17,20 +15,23 @@
         今後WebAPIとしてユーザ情報の一部（預金金額/ユーザ名/年齢/性別）を公開する予定です。<br>
         ご理解いただける方のみご登録を進めてください★</p>
         <br>
-        <tr><td>ユーザ名</td><td><input type="text" name="name" required></td></tr>
+        <p style="text-align:center"><font color="yellow">{{ msg|safe }}</font></p>
         
+        <tr><td>ユーザ名</td><td><input type="text" name="name" placeholder="yamada" required></td></tr>
+        <tr><td><p><font color="red">※半角英数字 1~20文字</font></p></td></tr>   
+
         <tr><td>生年月日</td><td><input type="date" name="birth" required></td></tr>
-        
+
         <tr><td>性別</td><td><label>男性<input type="radio" name="format0" value="M" checked></label>
                             <label>女性<input type="radio" name="format0" value="F"></label></td></tr>
-
-        <tr><td>メールアドレス</td><td><input type="email" name="email" required></td></tr>
         
-        <tr><td>ID</td><td><input type="text" name="id" placeholder="※半角数字 10桁以内" required></td></tr>
-                
-        <tr><td>パスワード</td><td><input type="password" name="passwd" placeholder="※半角英数字 20文字以内" required></td></tr>
-
-        <tr><th><td>&nbsp;</td></th></tr>
+        <tr><td>メールアドレス</td><td><input type="email" name="email" placeholder="a@gmail.com" required></td></tr>
+        
+        <tr><td>ID</td><td><input type="text" name="id" placeholder="123" required></td></tr>
+        <tr><td><p><font color="red">※半角数字 3~10桁</font></p></td></tr>   
+        
+        <tr><td>パスワード</td><td><input type="password" name="passwd" placeholder="yama123" required></td></tr>
+        <tr><td><p><font color="red">※半角英数字 5~20文字</font></p></td></tr>
         
         <tr><td colspan="2" align="right"><input type="submit" value="作成" class="btn-submit"></td></tr>
     </form>

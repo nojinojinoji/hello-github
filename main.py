@@ -9,6 +9,7 @@ import html
 import datetime
 import secrets
 from dicttoxml import dicttoxml
+from xml.dom.minidom import parseString 
 
 
 def connect():
@@ -26,14 +27,19 @@ app = Flask(__name__)
 app.secret_key = secrets.token_urlsafe(16)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
+#ログイン画面リダイレクト
+@app.route("/")
+def root():
+    return redirect("login")
+
 #API検索画面 #WebAPI出力画面
 @app.route("/getapi",methods=["GET","POST"])
 def root_page():
     if request.method == "GET":
         return render_template("getapi.html")
     elif request.method == "POST":
-        sex = request.form["format1"]
-        form = request.form["format2"]
+        sex = html.escape(request.form["format1"])
+        form = html.escape(request.form["format2"])
         
         # 性別分岐（全員）
         if sex=="MF":
@@ -67,27 +73,61 @@ def root_page():
             ORDER BY money DESC
             """)
         
-        res = {}
-        resp = {}
-        tmpa = []
-        for row in cur:
-            dic = {}
-            dic["name"] = row[0]
-            dic["money"] = row[1]
-            dic["sex"] = row[2]
-            tmpa.append(dic)
-        res["content"] = tmpa
-        con.commit()
-        con.close()
-        # JSONとXMLで分岐
-        # JSON
-        if form == "JSON":
+        # HTMLとJSONとXMLで分岐
+        if form == "HTML":
+            rank = 1
+            res = "<title>ランキング</title>"
+            res = res + "<h2>預金残高ランキング<h2>"
+            res = res + "<table align=\"center\" border=\"1\">\n"
+            res = res + "\t<tr><th>&nbsp;順位&nbsp;</th><th>&nbsp;ユーザ名&nbsp;</th><th>&nbsp;残高&nbsp;</th><th>&nbsp;性別&nbsp;</th>\n"
+            for row in cur:
+                name = row[0]
+                money = row[1]
+                sex = row[2]
+                if sex == "F":
+                    sex = "女"
+                else:
+                    sex = "男"
+                res = res + "<tr><th>" +str(rank)+"</th><th>" +str(name)+"</th><th>"+str(money) +"</th><th>" +str(sex)+ "</th></tr>\n"
+                rank += 1
+            con.commit()
+            con.close()
+            res = res + "</table>"
             return render_template("webapi.html",res=res)
-                   #return jsonify(res)
+        
+        if form == "JSON":
+            res = {}
+            tmpa = []
+            rank = 1
+            for row in cur:
+                dic = {}
+                dic["rank"] = rank
+                dic["name"] = row[0]
+                dic["money"] = row[1]
+                dic["sex"] = row[2]
+                tmpa.append(dic)
+                rank += 1
+            res["content"] = tmpa
+            con.commit()
+            con.close()
+            return render_template("webapi.html",res=res)
+        
         elif form == "XML":
-            xml = dicttoxml(dic)  
+            res = {}
+            tmpa = {}
+            dic = {}
+            rank = 1
+            for row in cur:
+                dic['rank'+str(rank)] = rank
+                dic["name"+str(rank)] = row[0]
+                dic["money"+str(rank)] = row[1]
+                dic["sex"+str(rank)] = row[2]
+                rank+=1
+            xml = dicttoxml(dic)
             resp = make_response(xml)
             resp.mimetype = "text/xml"
+            con.commit()
+            con.close()
             return resp
 
 #WebAPI検索結果
@@ -122,12 +162,12 @@ def make():
         if request.method == "GET":
                 return render_template('make.html')
         elif request.method == "POST":
-                email = request.form["email"] 
-                passwd = request.form["passwd"]
-                id =  request.form["id"]
-                name = request.form["name"] 
-                birth = request.form["birth"] 
-                sex = request.form["format0"]
+                email = html.escape(request.form["email"]) 
+                passwd = html.escape(request.form["passwd"])
+                id =  html.escape(request.form["id"])
+                name = html.escape(request.form["name"]) 
+                birth = html.escape(request.form["birth"])
+                sex = html.escape(request.form["format0"])
                 hashpass=gph(passwd)
 
                 con = connect()
@@ -161,9 +201,28 @@ def make():
                 con.commit()
                 con.close()
 
+                # 登録不可のnameを検出
+                nlist = list(name)
+                if len(nlist)>20:
+                    return render_template("make.html",msg="ユーザ名は20文字以内で登録してください")
+                
+                # 登録不可のidを検出
+                idlist = list(id)
+                if len(idlist)<3:
+                    return render_template("make.html",msg="IDは3文字以上で登録してください")
+                elif len(idlist)>10:
+                    return render_template("make.html",msg="IDは10文字以内で登録してください")
+
+                # 登録不可のpasswdを検出
+                plist = list(passwd)
+                if len(plist)<5:
+                    return render_template("make.html",msg="パスワードは5文字以上で登録してください")
+                elif len(plist)>20:
+                    return render_template("make.html",msg="パスワードは20文字以内で登録してください")
+
+                # メアド&IDの被りがない場合に登録ができる
                 con = connect()
                 cur = con.cursor()
-                # メアド&IDの被りがない場合に登録ができる
                 cur.execute("""
                 INSERT INTO users
                 (email,passwd,name,birth,id,sex)
@@ -199,8 +258,8 @@ def login():
             session.clear() 
             return render_template('login.html') 
         elif request.method == "POST":
-            id = request.form["id"] 
-            passwd = request.form["passwd"]
+            id = html.escape(request.form["id"])
+            passwd = html.escape(request.form["passwd"])
             con = connect()
             cur = con.cursor()
             # データベースに入力されたIDがあるか探す
@@ -233,23 +292,23 @@ def login():
 @app.route("/home")
 def home():
     if "name" in session:
-        # セッションに記録した情報を出力
-        id=session["id"]
-        con = connect()
-        cur = con.cursor()
-        cur.execute("""
-        SELECT money
-        FROM balance
-        WHERE id=%(id)s""",{"id":id})
-        data=[]
-        for row in cur:
+            # セッションに記録した情報を出力
+            id=session["id"]
+            con = connect()
+            cur = con.cursor()
+            cur.execute("""
+            SELECT money
+            FROM balance
+            WHERE id=%(id)s""",{"id":id})
+            data=[]
+            for row in cur:
                 data.append(row)
-        money=data[0][0]
-        con.close()
-        return render_template("mypage.html",
-        id=id,
-        money=money,
-        name=html.escape(session["name"])) 
+            money=data[0][0]
+            con.close()
+            return render_template("mypage.html",
+            id=id,
+            money=money,
+            name=html.escape(session["name"])) 
 
     else:
         # セッションがない場合ログイン画面にリダイレクト
@@ -262,7 +321,7 @@ def inout():
         if request.method == "GET": 
                 return render_template("record.html")
         elif request.method == "POST":
-                money = request.form["money"]
+                money = html.escape(request.form["money"])
                 money = int(money)
                 if "id" in session:
                         id = session["id"]
