@@ -1,6 +1,6 @@
 <head>
     <meta charset=”utf-8″>
-    <title>マイページ</title>
+    <title>入出金記録</title>
     <link rel="stylesheet" href="static/css/style.css">
 </head>
 
@@ -14,8 +14,22 @@
     入金5000円 ⇒ 5000<br>
     出金1000円 ⇒ -1000</p>
     
+  <table align="center">
     <form method="POST" action="inout"> 
-      <p style="text-align:center">入出金金額 
-        <input type="number" name="money"></p>
+      <tr>
+        <td class="example1">入出金金額</td><td><input type="number" name="money"></td>
+      </tr>
+      <tr>
+        <td class="example1">詳細</td><td><input type="text" name="detail"></td>
+      </tr>
+  </table>
+  <br>
       <input type="submit" value="預金金額を更新する"  class="btn-submit">
+    
+      <br>
+      <br>
+      <br>
+      <div class="linkseni">
+          <a href="home">TOPに戻る</a>
+      </div>
 </body>
