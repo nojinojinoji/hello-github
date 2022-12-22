@@ -2,6 +2,7 @@
     <meta charset=”utf-8″>
     <title>入出金履歴</title>
     <link rel="stylesheet" href="static/css/style.css">
+    {{ graph|safe }}
 </head>
 
 <body>
@@ -9,12 +10,19 @@
     <h1>預金残高記録 アプリケーション</h1>
     <h3  class="daimei">入出金履歴</h3>
     {{ res|safe }}
+    <br>
+
+    <h3  class="daimei">入出金の割合</h3>
+    <br>
+
+    <div class="pie"></div>
 
     <br>
-      <br>
-      <br>
-      <div class="linkseni">
-          <a href="home">TOPに戻る</a>
-      </div>
+    <p style="text-align:center">出金金額(青)：{{ minus|safe }} %  &emsp; 入金金額(赤)：{{ plus|safe }} %</p>
+    <br>
+    <br>
+    <div class="linkseni">
+        <a href="home">TOPに戻る</a>
+    </div>
 
 </body>

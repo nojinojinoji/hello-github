@@ -11,7 +11,7 @@ import html
 import datetime
 import secrets
 from dicttoxml import dicttoxml
-from xml.dom.minidom import parseString 
+from xml.dom.minidom import parseString
 
 #######################################################
 
@@ -343,6 +343,8 @@ def result():
 def rireki():
     if "name" in session:
         # セッションに記録した情報を出力
+        mai=0 # 出金の回数
+        pur=0 # 入金の回数
         id=session["id"]
         con = connect()
         cur = con.cursor()
@@ -359,10 +361,31 @@ def rireki():
             time = row[2]
             detail = row[3]
             res = res + "<tr><th>" +str(time)+"</th><th>" +str(money)+"</th><th>" +str(sum)+"</th><th>"+str(detail) +"</th></tr>\n"
+            # 入金と出金を金額を計算
+            if money<0:
+                mai-=money
+            else:
+                pur+=money
+        res = res + "</table>"
         con.commit()
         con.close()
-        res = res + "</table>"
-        return render_template("rireki.html",res=res)
+
+        # 入金と出金の割合の円グラフ作成
+        plus=int(pur*100/(pur+mai))
+        minus=int(mai*100/(pur+mai))
+
+        graph="""<style>
+        .pie {
+	    position: relative; 
+	    margin-right: auto;
+	    margin-left: auto;
+	    width: 300px;
+	    height: 300px;
+	    background-image: conic-gradient(#df616e 0% """
+        graph=graph+str(plus)+"%, #8680db "+str(minus)+"% 100%); border-radius: 50%;}</style>"
+
+        return render_template("rireki.html",
+        res=res, graph=graph,plus=plus, minus=minus)
     else:
         # セッションがない場合ログイン画面にリダイレクト
         return redirect("login")
