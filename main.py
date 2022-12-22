@@ -1,4 +1,5 @@
 #######################################################
+
 from cv2 import AKAZE_DESCRIPTOR_KAZE
 from flask import Flask, request, session, jsonify, make_response, redirect, render_template
 from scipy.fft import idctn
@@ -26,11 +27,12 @@ def connect():
 
 #######################################################
 
+# セッション
 app = Flask(__name__)
 app.secret_key = secrets.token_urlsafe(16)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
-#ログイン画面リダイレクト
+# ログイン画面リダイレクト
 @app.route("/")
 def root():
     return redirect("login")
@@ -43,37 +45,32 @@ def make():
     if request.method == "GET":
         return render_template('make.html')
     elif request.method == "POST":
-        email = request.form["email"] 
-        passwd = request.form["passwd"]
-        id =  request.form["id"]
-        name = request.form["name"] 
-        birth = request.form["birth"] 
-        sex = request.form["format0"]
-        email = html.escape(request.form["email"]) 
-        passwd = html.escape(request.form["passwd"])
-        id =  html.escape(request.form["id"])
-        name = html.escape(request.form["name"]) 
-        birth = html.escape(request.form["birth"])
-        sex = html.escape(request.form["format0"])
-        hashpass=gph(passwd)
+        email = html.escape(request.form["email"]) #メールアドレス
+        passwd = html.escape(request.form["passwd"]) #パスワード
+        id =  html.escape(request.form["id"]) #ID
+        name = html.escape(request.form["name"]) #ユーザ名
+        birth = html.escape(request.form["birth"]) #生年月日
+        sex = html.escape(request.form["format0"]) #性別
+        hashpass=gph(passwd) # パスワードのハッシュ化
 
-        con = connect()
-        cur = con.cursor()
         # メールアドレスの被りがあるか検索
         # execute() ＝ SQLを実行する
+        con = connect()
+        cur = con.cursor()
         cur.execute("""
-        SELECT * FROM users WHERE email=%(email)s""",
+        SELECT * FROM users WHERE email=%(email)s""", 
         {"email":email})
         data=[]
         for row in cur:
             data.append(row)
-        # メールアドレスが1つ以上登録されていた場合⇒登録不可
+        
+        # メールアドレスが登録されていた場合⇒登録不可
         if len(data)!=0:
             return render_template("make.html",msg="既に存在するメールアドレスです")
         con.commit()
         con.close()
                 
-        # idの被りがあるか検索
+        # IDの被りがあるか調べる
         con = connect()
         cur = con.cursor()
         cur.execute("""
@@ -82,35 +79,36 @@ def make():
         data=[]
         for row in cur:
             data.append(row)
-        # idが1つ以上登録されていた場合⇒登録不可
+        
+        # IDが登録されていた場合⇒登録不可
         if len(data)!=0:
             return render_template("make.html",msg="既に存在するIDです")
         con.commit()
         con.close()
 
-        # 登録不可のnameを検出
+        # 登録不可のユーザ名を調べる
         nlist = list(name)
         if len(nlist)>20:
             return render_template("make.html",msg="ユーザ名は20文字以内で登録してください")
 
-        # 登録不可のidを検出
+        # 登録不可のIDを調べる
         idlist = list(id)
         if len(idlist)<3:
             return render_template("make.html",msg="IDは3文字以上で登録してください")
         elif len(idlist)>10:
             return render_template("make.html",msg="IDは10文字以内で登録してください")
 
-        # 登録不可のpasswdを検出
+        # 登録不可のパスワードを調べる
         plist = list(passwd)
         if len(plist)<5:
             return render_template("make.html",msg="パスワードは5文字以上で登録してください")
         elif len(plist)>20:
             return render_template("make.html",msg="パスワードは20文字以内で登録してください")
 
-        # メアド&IDの被りがない場合に登録ができる
+        # メアド&IDの被りがない場合 ⇒ 登録可能
+        # ユーザテーブルに登録する
         con = connect()
         cur = con.cursor()
-        # メアド&IDの被りがない場合に登録ができる
         cur.execute("""
         INSERT INTO users
         (email,passwd,name,birth,id,sex)
@@ -118,7 +116,8 @@ def make():
         {"email":email, "hashpass":hashpass, "name":name, "birth":birth, "id":id,"sex":sex})
         con.commit()
         con.close()
-        # 預金テーブルにも登録する
+
+        # 預金テーブルに登録する
         con = connect()
         cur = con.cursor()
         cur.execute("""
@@ -129,7 +128,7 @@ def make():
         con.commit()
         con.close()
 
-        # 履歴テーブルにも登録する
+        # 履歴テーブルに登録する
         con = connect()
         cur = con.cursor()
         cur.execute("""
@@ -155,61 +154,58 @@ def login():
     if request.method == "GET": 
         # ログイン画面ではセッションを破棄
         session.clear() 
-        return render_template('login.html') 
+        return render_template('login.html')
     elif request.method == "POST":
-        id = html.escape(request.form["id"])
-        passwd = html.escape(request.form["passwd"])
+        id = html.escape(request.form["id"]) #ID
+        passwd = html.escape(request.form["passwd"]) # パスワード
+        
+        # データベースに入力されたIDがあるか探す        
         con = connect()
         cur = con.cursor()
-        # データベースに入力されたIDがあるか探す
         cur.execute("""
         SELECT name,birth,email,id,passwd
         FROM users
         WHERE id=%(id)s""",{"id":id})
+        con.close()
         data=[]
-
         for row in cur:
             data.append([row[0],row[1],row[2],row[3],row[4]])
-
+        
+        # IDが見つからない場合
         if len(data)==0:
-            con.close()
             return render_template("login.html",msg="IDが間違っています")
-            
+        
+        # IDとパスワードが一致する場合 ⇒ セッションに登録
         if cph(data[0][4],passwd):
-            # ログイン情報をセッションに記録する
             session["name"]=data[0][0]
             session["id"]=data[0][3]
-            con.close()
             return redirect("home")
-                
+        
+        # パスワードが間違っている場合     
         else:
-            con.close()
             return render_template("login.html",msg="パスワードが間違っています")
 
 #######################################################
-
 
 #マイページ
 @app.route("/home")
 def home():
     if "name" in session:
-            # セッションに記録した情報を出力
-            id=session["id"]
-            con = connect()
-            cur = con.cursor()
-            cur.execute("""
-            SELECT money
-            FROM balance
-            WHERE id=%(id)s""",{"id":id})
-            data=[]
-            for row in cur:
-                data.append(row)
-            money=data[0][0]
-            con.close()
-            return render_template("mypage.html",
-            id=id,
-            money=money,
-            name=html.escape(session["name"])) 
+        # セッションに記録した情報を出力
+        id=session["id"]
+        con = connect()
+        cur = con.cursor()
+        cur.execute("""
+        SELECT money
+        FROM balance
+        WHERE id=%(id)s""",{"id":id})
+        con.close()
+        data=[]
+        for row in cur:
+            data.append(row)
+        money=data[0][0]
+        return render_template("mypage.html",
+        id=id, money=money, name=html.escape(session["name"])) 
 
     else:
         # セッションがない場合ログイン画面にリダイレクト
@@ -217,7 +213,7 @@ def home():
 
 #######################################################
 
-#API検索画面 #WebAPI出力画面
+# APIフォーマット指定
 @app.route("/getapi",methods=["GET","POST"])
 def root_page():
     if request.method == "GET":
@@ -317,13 +313,11 @@ def root_page():
 
 #######################################################
 
-#WebAPI検索結果
+# WebAPI発信画面
 @app.route("/result")
 def result():
-    
     form = request.args.get("format")
     id = request.args.get("id")
-    
     con = connect()
     cur = con.cursor()
     cur.execute("""
@@ -375,7 +369,7 @@ def rireki():
         
 ##########################################################
 
-# 収入支出
+# 入出金記録
 @app.route('/inout',methods=["GET","POST"])
 def inout():
     if request.method == "GET": 
@@ -419,7 +413,6 @@ def inout():
             {"id":id,"money":money,"sum":amoney,"time":str(datetime.datetime.today()), "detail":detail})
             con.commit()
             con.close()
-
             return render_template("finish.html",amoney=amoney)
                 
         else:
